@@ -14,3 +14,5 @@ if(BUILD_GMOCK)
 elseif(BUILD_GTEST)
   add_subdirectory( googletest )
 endif()
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists-internal.txt")

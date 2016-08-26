@@ -1,0 +1,49 @@
+
+initialize_3rdparty_project(gmock)
+
+if (PLATFORM_WINDOWS)
+	set(GMOCK_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock/${CMAKE_BUILD_TYPE}")
+	set(GTEST_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock/gtest/${CMAKE_BUILD_TYPE}")
+elseif (PLATFORM_ANDROID)
+	set(GMOCK_OUTPUT_DIR "${LIBRARY_OUTPUT_PATH}")
+	set(GTEST_OUTPUT_DIR "${LIBRARY_OUTPUT_PATH}")
+elseif (PLATFORM_IOS)
+	set(GMOCK_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock/${CMAKE_CFG_INTDIR}")
+	set(GTEST_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock/gtest/${CMAKE_CFG_INTDIR}")
+else()
+	set(GMOCK_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock")
+	set(GTEST_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/googlemock/gtest")
+endif()
+
+set(GMOCK_STATIC_LIB "${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(GTEST_STATIC_LIB "${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}")
+
+set_cpack_config_defaults(${PACKAGE_NAME})
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/googlemock/include
+	DESTINATION ${DIST_PACKAGE_ROOT})
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/googletest/include/
+	DESTINATION ${DIST_PACKAGE_ROOT}/include)
+
+if (PLATFORM_WINDOWS)
+	install(DIRECTORY ${GMOCK_OUTPUT_DIR}/
+		DESTINATION ${DIST_PACKAGE_ROOT}/lib)
+	install(DIRECTORY ${GTEST_OUTPUT_DIR}/
+		DESTINATION ${DIST_PACKAGE_ROOT}/lib)
+else()
+	install(DIRECTORY ${GMOCK_OUTPUT_DIR}/
+		DESTINATION ${DIST_PACKAGE_ROOT}/lib
+		FILES_MATCHING PATTERN *.a
+		PATTERN _CPack_Packages EXCLUDE)
+endif()
+
+
+
+create_package_cpack_config(${PACKAGE_NAME})
+add_package_dist_target(${PACKAGE_NAME} ${GMOCK_STATIC_LIB} ${GTEST_STATIC_LIB})
+
+# Because gtest already uses cmake, we need to inject a fake dependency to
+# get cmake to build gtest before we package it up.
+add_dependencies(3rdparty_dist_gmock gmock gmock_main gtest gtest_main)
+add_dependencies(3rdparty_build_gmock gmock gmock_main gtest gtest_main)
